@@ -1,7 +1,7 @@
 import re
 import pandas as pd
 import json
-from checksum import calculate_checksum  # Подключаем модуль для вычисления контрольной суммы
+from hashlib import md5  # Используем hashlib для вычисления контрольной суммы
 
 
 # Функции для валидации данных с использованием регулярных выражений
@@ -80,6 +80,13 @@ def validate_data(data):
         'date':                 validate_date(data.get('date')),
     }
     return validation_results
+
+
+# Функция для вычисления контрольной суммы
+def calculate_checksum(data):
+    # Преобразуем данные в строку (индексы строк с ошибками)
+    data_str = ''.join(map(str, data))  # Преобразуем список индексов в строку
+    return md5(data_str.encode()).hexdigest()  # Вычисляем и возвращаем MD5-хеш
 
 
 # Сериализация результата в JSON
