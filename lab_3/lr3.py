@@ -135,6 +135,6 @@ def read_and_validate_csv(file_path, variant_number):
 
 # Пример использования
 file_path = '8.csv'  # Укажите путь к вашему файлу CSV
-variant_number = 8
+variant_number = "8"
 
 validation_results, error_rows = read_and_validate_csv(file_path, variant_number)
