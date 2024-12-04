@@ -1,7 +1,9 @@
 import re
 import pandas as pd
 import json
-from hashlib import md5  # Используем hashlib для вычисления контрольной суммы
+
+
+from checksum import calculate_checksum
 
 
 # Функции для валидации данных с использованием регулярных выражений
@@ -9,13 +11,18 @@ def validate_telephone(telephone):
     pattern = r'^\+7-\(\d{3}\)-\d{3}-\d{2}-\d{2}$'
     return re.match(pattern, telephone) is not None
 
+def validate_height(height):
+    # Проверяем, что значение роста находится в пределах от 0.5 до 3.00 метров
+    pattern = r'^(?:[1-2]?\d(\.\d{1,2})?|3(\.00)?)$'
+    if re.match(pattern, str(height)):
+        # Дополнительная проверка для роста больше 3 метров и меньше 0.5 метров
+        height_value = float(height)
+        if 0.5 <= height_value <= 3.00:
+            return True
+    return False
+
 
 def validate_http_status_message(status_message):
-    # Если значение None, возвращаем False
-    if status_message is None:
-        return False
-
-    # Применяем регулярное выражение, если значение не None
     pattern = r'^\d{3} [A-Za-z ]+$'
     return re.match(pattern, status_message) is not None
 
@@ -31,9 +38,6 @@ def validate_identifier(identifier):
 
 
 def validate_ip_v4(ip_v4):
-    if not ip_v4:
-        return False
-
     pattern = r'^([0-9]{1,3}\.){3}[0-9]{1,3}$'
     return re.match(pattern, ip_v4) is not None
 
@@ -49,15 +53,22 @@ def validate_blood_type(blood_type):
 
 
 def validate_isbn(isbn):
-    if not isbn:  # Проверка на None или пустую строку
-        return False
-    pattern = r'^(\d{3}-)?\d-\d{5}-\d{3}-\d$'
+    pattern = r'^(\d{3}\-)?\d-\d{5}-\d{3}-\d$'
     return re.match(pattern, isbn) is not None
 
 
 def validate_uuid(uuid):
     pattern = r'^[a-f0-9\-]{36}$'
     return re.match(pattern, uuid) is not None
+def validate_occupation(occupation):
+    # Регулярное выражение для проверки профессии
+    pattern = r'^[A-Za-zА-Яа-яёЁ\- ]+$'
+    return re.match(pattern, occupation) is not None
+
+def validate_issn(issn):
+    # Регулярное выражение для проверки ISSN
+    pattern = r'^\d{4}-\d{4}$'
+    return re.match(pattern, issn) is not None
 
 
 def validate_date(date):
@@ -68,25 +79,19 @@ def validate_date(date):
 # Валидация всей строки данных
 def validate_data(data):
     validation_results = {
-        'telephone':            validate_telephone(data.get('telephone')),
-        'http_status_message':  validate_http_status_message(data.get('http_status_message')),
-        'inn':                  validate_inn(data.get('inn')),
-        'identifier':           validate_identifier(data.get('identifier')),
-        'ip_v4':                validate_ip_v4(data.get('ip_v4')),
-        'latitude':             validate_latitude(data.get('latitude')),
-        'blood_type':           validate_blood_type(data.get('blood_type')),
-        'isbn':                 validate_isbn(data.get('isbn')),
-        'uuid':                 validate_uuid(data.get('uuid')),
-        'date':                 validate_date(data.get('date')),
+        'telephone': validate_telephone(data['telephone']),
+        'height':validate_height(data['height']),
+        'inn': validate_inn(data['inn']),
+        'identifier': validate_identifier(data['identifier']),
+        'occupation': validate_identifier(data['occupation']),
+        'latitude': validate_latitude(data['latitude']),
+        'blood_type': validate_blood_type(data['blood_type']),
+        'issn': validate_isbn(data['issn']),
+        'uuid': validate_uuid(data['uuid']),
+        'date': validate_date(data['date'])
     }
     return validation_results
 
-
-# Функция для вычисления контрольной суммы
-def calculate_checksum(data):
-    # Преобразуем данные в строку (индексы строк с ошибками)
-    data_str = ''.join(map(str, data))  # Преобразуем список индексов в строку
-    return md5(data_str.encode()).hexdigest()  # Вычисляем и возвращаем MD5-хеш
 
 
 # Сериализация результата в JSON
@@ -111,16 +116,16 @@ def read_and_validate_csv(file_path, variant_number):
     for index, row in df.iterrows():
         # Собираем данные для валидации
         data = {
-            'telephone':            row.get('telephone'),
-            'http_status_message':  row.get('http_status_message'),
-            'inn':                  row.get('inn'),
-            'identifier':           row.get('identifier'),
-            'ip_v4':                row.get('ip_v4'),
-            'latitude':             row.get('latitude'),
-            'blood_type':           row.get('blood_type'),
-            'isbn':                 row.get('isbn'),
-            'uuid':                 row.get('uuid'),
-            'date':                 row.get('date'),
+            'telephone': row.get('telephone'),
+            'height': row.get('height'),
+            'inn': row.get('inn'),
+            'identifier': row.get('identifier'),
+            'occupation': row.get('occupation'),
+            'latitude': row.get('latitude'),
+            'blood_type': row.get('blood_type'),
+            'issn': row.get('issn'),
+            'uuid': row.get('uuid'),
+            'date': row.get('date')
         }
 
         # Выполняем валидацию
@@ -145,3 +150,4 @@ file_path = '8.csv'  # Укажите путь к вашему файлу CSV
 variant_number = "8"
 
 validation_results, error_rows = read_and_validate_csv(file_path, variant_number)
+
